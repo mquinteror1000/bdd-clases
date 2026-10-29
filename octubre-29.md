@@ -109,3 +109,101 @@ sys@mqrbda_s1> select 1+1;
 
 sys@mqrbda_s1> 
 ```
+
+##### ¿Qué metodo se acceso es el mas eficiente para saber todos los registros de una tabla?
+
+```sql
+SELECT /*+ INDEX_FFS(t nombre_del_indice_pk) */ COUNT(columna_pk)
+FROM tu_tabla t;
+```
+
+Otro ejemplo
+
+tiene nulos
+
+```sql
+explain plan for
+    select count (*) from paciente
+select plan_table_output from table(dbms_xplan.display);
+```
+
+Si se va a usar el indice gracias a count ya que count **no usa los nulos**
+
+-  Cuando se pone * : sdsd -> Saber el número de registros de una tabla; no valida nulos
+
+- Cunando se pone email:  
+
+consulta mas eficiente posible para que muestre cuantos paientes no tienen email
+
+```sql
+select count(*) form praciente
+    where email is null; --- la mas simple ; el plan de ejecucion no usará el índice xq email tiene nulos
+
+select count (*) - count( email )  from paciente ; -- plan must¿ gives  IDX_FFS
+
+-- buscar otra sintaxis que haga casi lo mismo
+ 
+
+
+
+```
+
+## Skip Index Scan
+
++ Consulta no incluye en el predicado la primera columna del índice
+
++ Primera columna tiene muy pocos valores distintos
+
++ Segunda columna tiene una gran cantidad de valores distrintos
+
+| pago_orden            |
+| --------------------- |
+| odden_id<br> num_pago |
+| --- columns           |
+
+```sql
+create unique index p_ix
+    on pago_orden( orden_id, pago );
+
+--- consultas que quieran usar este indice compuesto
+where orden-id ----   Importa el orden en el que se define el indice y luego en el que se usa
+```
+
+Puede ayudar cuando el indice se creoi al reves
+
+| genero | email                    | paciente |
+| ------ | ------------------------ | -------- |
+| F      | wolf@company.example.com | rowid    |
+|        |                          |          |
+|        |                          |          |
+|        |                          |          |
+|        |                          |          |
+
+```sql
+select * from paciente 
+```
+
+
+
+
+
+
+
+Como indece fue creado al revez, no se puede usar el indeice
+
+```sql
+-- ejemplo en que el manejador transforma la sentencia
+select * from paciente
+where genero = 'F' and email = 'abbey@company.example.com'
+union all
+select * from paciente
+where genero = 'M' and email = 'abbey@company.example.com';
+```
+
+fue factible xq el numero de registros distintos de la primer columna no es mucho, de lo contrario tendría 
+
+En este método se hace una transformación SQL
+
+
+
+Hasta pagina 36
